@@ -25,7 +25,7 @@ export default function MapPage() {
 
   useEffect(() => {
     // Fetch provinces to display details in the side panel
-    axiosInstance.get('/api/v1/provincias')
+    axiosInstance.get('/provincias')
       .then(res => {
         const data = res.data.data || res.data;
         setProvincias(data);

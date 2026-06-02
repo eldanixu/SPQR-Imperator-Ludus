@@ -28,7 +28,7 @@ export default function RomanMap({ onProvinciaClick }: RomanMapProps) {
       try {
         const [geoRes, apiRes] = await Promise.all([
           d3.json<FeatureCollection>('/roman_empire.geojson'),
-          axiosInstance.get('/api/v1/provincias'),
+          axiosInstance.get('/provincias'),
         ]);
 
         if (!isMounted) return;
