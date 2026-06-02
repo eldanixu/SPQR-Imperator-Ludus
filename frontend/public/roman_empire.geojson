@@ -1,0 +1,55 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "id": "hispania", "name": "Hispania" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-9.0, 43.0], [-1.0, 43.0], [3.0, 42.0], [0.0, 38.0], [-4.0, 36.0], [-9.0, 37.0], [-9.0, 43.0]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "gallia", "name": "Gallia" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-4.0, 43.0], [-5.0, 48.0], [-2.0, 50.0], [6.0, 52.0], [8.0, 48.0], [7.0, 43.0], [-4.0, 43.0]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "italia", "name": "Italia" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [7.0, 44.0], [12.0, 46.0], [18.0, 40.0], [15.0, 38.0], [11.0, 42.0], [7.0, 44.0]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "aegyptus", "name": "Aegyptus" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [25.0, 31.0], [33.0, 31.0], [35.0, 29.0], [34.0, 22.0], [25.0, 22.0], [25.0, 31.0]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "id": "britannia", "name": "Britannia" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-5.0, 50.0], [-6.0, 55.0], [-2.0, 58.0], [2.0, 52.0], [1.0, 50.0], [-5.0, 50.0]
+        ]]
+      }
+    }
+  ]
+}
