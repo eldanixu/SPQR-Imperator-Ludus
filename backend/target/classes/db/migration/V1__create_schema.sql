@@ -1,0 +1,65 @@
+CREATE TABLE usuario (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  rol ENUM('ADMIN','JUGADOR') DEFAULT 'JUGADOR',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE provincia (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  nombre_latino VARCHAR(100),
+  descripcion TEXT,
+  region_svg_id VARCHAR(50) UNIQUE,
+  capital VARCHAR(100),
+  superficie_km2 DECIMAL(10,2),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE estado_jugador (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id BIGINT NOT NULL UNIQUE,
+  provincia_actual_id BIGINT,
+  oro INT DEFAULT 500,
+  gloria INT DEFAULT 0,
+  popularidad INT DEFAULT 100,
+  turno INT DEFAULT 1,
+  partida_activa BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id),
+  FOREIGN KEY (provincia_actual_id) REFERENCES provincia(id)
+);
+
+CREATE TABLE pregunta_historica (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  provincia_id BIGINT,
+  pregunta TEXT NOT NULL,
+  opcion_a VARCHAR(500) NOT NULL,
+  opcion_b VARCHAR(500) NOT NULL,
+  opcion_c VARCHAR(500) NOT NULL,
+  opcion_d VARCHAR(500) NOT NULL,
+  respuesta_correcta CHAR(1) NOT NULL,
+  dificultad ENUM('FACIL','MEDIA','DIFICIL') DEFAULT 'MEDIA',
+  recompensa_oro INT DEFAULT 50,
+  penalizacion_popularidad INT DEFAULT 10,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (provincia_id) REFERENCES provincia(id)
+);
+
+CREATE TABLE partida_resultado (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id BIGINT NOT NULL,
+  oro_final INT,
+  gloria_final INT,
+  popularidad_final INT,
+  turnos INT,
+  resultado ENUM('VICTORIA','DERROTA_POPULARIDAD','DERROTA_BANCARROTA'),
+  epitafio TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+);
