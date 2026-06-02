@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  spqr-mysql:
+    image: mysql:8.0
+    container_name: spqr-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: spqr_db
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: spqr
+      MYSQL_PASSWORD: spqr123
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  spqr-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: spqr-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://spqr-mysql:3306/spqr_db?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: spqr
+      SPRING_DATASOURCE_PASSWORD: spqr123
+    depends_on:
+      spqr-mysql:
+        condition: service_healthy
+
+  spqr-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: spqr-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - RUNNING_IN_DOCKER=true
+    depends_on:
+      - spqr-backend
+
+volumes:
+  mysql_data:
