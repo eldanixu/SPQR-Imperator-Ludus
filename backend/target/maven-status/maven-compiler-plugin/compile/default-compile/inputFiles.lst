@@ -2,9 +2,11 @@
 /Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/config/SecurityConfig.java
 /Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/controller/AuthController.java
 /Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/controller/HealthController.java
+/Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/controller/ProvinciaController.java
 /Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/dto/ApiResponse.java
 /Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/dto/LoginRequest.java
 /Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/dto/LoginResponse.java
+/Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/dto/ProvinciaDTO.java
 /Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/dto/RegisterRequest.java
 /Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/entity/EstadoJugador.java
 /Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/entity/Provincia.java
@@ -16,3 +18,5 @@
 /Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/security/CustomUserDetailsService.java
 /Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/security/JwtAuthenticationFilter.java
 /Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/security/JwtService.java
+/Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/service/ProvinciaService.java
+/Users/danielprado/Desktop/SPQR_V2/backend/src/main/java/com/spqr/manager/service/ProvinciaServiceImpl.java
