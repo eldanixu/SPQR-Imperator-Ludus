@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
+import { useGameStore } from '../store/useGameStore';
+import GameHUD from '../components/game/GameHUD';
 import RomanMap from '../components/map/RomanMap';
 import axiosInstance from '../api/axiosInstance';
 
@@ -22,6 +24,7 @@ export default function MapPage() {
     username: state.username,
     logout: state.logout,
   }));
+  const { modoJuego, toggleModo, setEstado } = useGameStore();
 
   useEffect(() => {
     // Fetch provinces to display details in the side panel
@@ -36,6 +39,19 @@ export default function MapPage() {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleToggleModo = () => {
+    const nuevoModo = !modoJuego;
+    toggleModo();
+    if (nuevoModo) {
+      axiosInstance.get('/juego/estado')
+        .then(res => {
+          const data = res.data.data || res.data;
+          setEstado(data);
+        })
+        .catch(err => console.error('Error fetching game state:', err));
+    }
   };
 
   const handleProvinciaClick = (regionSvgId: string) => {
@@ -80,6 +96,18 @@ export default function MapPage() {
     welcomeText: {
       fontSize: '1rem',
       color: '#e6ded4',
+    },
+    toggleBtn: {
+      backgroundColor: modoJuego ? '#C9A84C' : 'transparent',
+      border: '1px solid #C9A84C',
+      borderRadius: '4px',
+      color: modoJuego ? '#1a1410' : '#C9A84C',
+      padding: '8px 16px',
+      cursor: 'pointer',
+      fontFamily: "'Cinzel', serif",
+      fontSize: '0.9rem',
+      fontWeight: 'bold',
+      transition: 'all 0.3s ease',
     },
     logoutBtn: {
       backgroundColor: isHovered ? '#C9A84C' : 'transparent',
@@ -166,6 +194,10 @@ export default function MapPage() {
         <h1 style={styles.navTitle}>SPQR Imperator Ludus</h1>
         <div style={styles.navActions}>
           <span style={styles.welcomeText}>Bienvenido {username || 'Imperator'}</span>
+          <button style={styles.toggleBtn} onClick={handleToggleModo}>
+            {modoJuego ? '📜 Modo Historia' : '⚔️ Modo Imperator'}
+          </button>
+          <GameHUD />
           <button
             onClick={handleLogout}
             style={styles.logoutBtn}
