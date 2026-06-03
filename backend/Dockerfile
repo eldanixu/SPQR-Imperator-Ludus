@@ -1,9 +1,9 @@
-FROM eclipse-temurin:21-jdk-alpine
+FROM eclipse-temurin:21-jdk-jammy
 
 WORKDIR /app
 
-# Install bash/curl because alpine needs them for standard maven wrapper script execution
-RUN apk add --no-cache bash curl ca-certificates
+# Install bash/curl because it might be needed for standard maven wrapper script execution
+RUN apt-get update && apt-get install -y bash curl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY mvnw .
 COPY .mvn .mvn
@@ -16,4 +16,6 @@ COPY src src
 
 EXPOSE 8080
 
-CMD ["./mvnw", "spring-boot:run"]
+ENV JAVA_OPTS="-Xms128m -Xmx256m -XX:+UseSerialGC"
+
+CMD ["sh", "-c", "./mvnw spring-boot:run -Dspring-boot.run.jvmArguments=\"$JAVA_OPTS\""]

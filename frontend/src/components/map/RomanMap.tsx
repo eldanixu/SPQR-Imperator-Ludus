@@ -18,8 +18,13 @@ interface RomanMapProps {
 
 export default function RomanMap({ onProvinciaClick }: RomanMapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const onClickRef = useRef(onProvinciaClick);
   const [provincias, setProvincias] = useState<Provincia[]>([]);
   const [selectedProvincia, setSelectedProvincia] = useState<Provincia | null>(null);
+
+  useEffect(() => {
+    onClickRef.current = onProvinciaClick;
+  }, [onProvinciaClick]);
 
   useEffect(() => {
     let isMounted = true;
@@ -94,10 +99,11 @@ export default function RomanMap({ onProvinciaClick }: RomanMapProps) {
       })
       .on('click', (event, d) => {
         const id = (d as Feature).properties?.id;
+        console.log('D3 click fired:', id);
         const prov = provMap.get(id);
         
-        if (onProvinciaClick) {
-          onProvinciaClick(id);
+        if (onClickRef.current) {
+          onClickRef.current(id);
         } else if (prov) {
           setSelectedProvincia(prov);
         } else {

@@ -4,6 +4,7 @@ import com.spqr.manager.dto.EstadoJugadorDTO;
 import com.spqr.manager.dto.EventoDTO;
 import com.spqr.manager.dto.ResolverRequest;
 import com.spqr.manager.dto.ResolverResponse;
+import com.spqr.manager.dto.HistorialDTO;
 import com.spqr.manager.entity.EstadoJugador;
 import com.spqr.manager.entity.PartidaResultado;
 import com.spqr.manager.entity.PreguntaHistorica;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -161,6 +163,22 @@ public class GameServiceImpl implements GameService {
         estado.setProvinciaActual(null);
         estado.setPartidaActiva(true);
         estadoJugadorRepository.save(estado);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<HistorialDTO> getHistorial(String username) {
+        return partidaResultadoRepository.findTop5ByUsuarioUsernameOrderByCreatedAtDesc(username)
+                .stream()
+                .map(p -> new HistorialDTO(
+                        p.getOroFinal(),
+                        p.getGloriaFinal(),
+                        p.getPopularidadFinal(),
+                        p.getTurnos(),
+                        p.getResultado(),
+                        p.getCreatedAt() != null ? p.getCreatedAt().toString() : ""
+                ))
+                .collect(Collectors.toList());
     }
 
     private EstadoJugador getOrCreateEstadoJugador(String username) {

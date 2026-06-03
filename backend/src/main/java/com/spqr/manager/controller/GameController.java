@@ -5,10 +5,13 @@ import com.spqr.manager.dto.EstadoJugadorDTO;
 import com.spqr.manager.dto.EventoDTO;
 import com.spqr.manager.dto.ResolverRequest;
 import com.spqr.manager.dto.ResolverResponse;
+import com.spqr.manager.dto.HistorialDTO;
 import com.spqr.manager.service.GameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/juego")
@@ -41,5 +44,11 @@ public class GameController {
     public ApiResponse<Void> resetPartida(Authentication authentication) {
         gameService.resetPartida(authentication.getName());
         return new ApiResponse<>(true, null, "Partida reiniciada");
+    }
+
+    @GetMapping("/historial")
+    public ApiResponse<List<HistorialDTO>> getHistorial(Authentication authentication) {
+        List<HistorialDTO> historial = gameService.getHistorial(authentication.getName());
+        return new ApiResponse<>(true, historial, "Historial obtenido correctamente");
     }
 }

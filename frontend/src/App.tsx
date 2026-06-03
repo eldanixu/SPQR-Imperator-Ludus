@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
 import LoginPage from './pages/LoginPage';
 import MapPage from './pages/MapPage';
+import FinPartidaPage from './pages/FinPartidaPage';
 import './index.css';
 
 interface ProtectedRouteProps {
@@ -36,6 +37,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <MapPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/fin-partida"
+          element={
+            <ProtectedRoute>
+              <FinPartidaPage />
             </ProtectedRoute>
           }
         />

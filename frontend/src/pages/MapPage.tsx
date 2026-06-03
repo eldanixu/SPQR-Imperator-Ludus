@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { useGameStore } from '../store/useGameStore';
 import GameHUD from '../components/game/GameHUD';
+import EventoModal from '../components/game/EventoModal';
 import RomanMap from '../components/map/RomanMap';
+import { useGameFlow } from '../hooks/useGameFlow';
 import axiosInstance from '../api/axiosInstance';
 
 interface Provincia {
@@ -24,7 +26,9 @@ export default function MapPage() {
     username: state.username,
     logout: state.logout,
   }));
-  const { modoJuego, toggleModo, setEstado } = useGameStore();
+  const modoJuego = useGameStore((state) => state.modoJuego);
+  const { toggleModo, setEstado, eventoActual } = useGameStore();
+  const { handleProvinciaClick: handleGameProvinciaClick } = useGameFlow();
 
   useEffect(() => {
     // Fetch provinces to display details in the side panel
@@ -54,9 +58,14 @@ export default function MapPage() {
     }
   };
 
-  const handleProvinciaClick = (regionSvgId: string) => {
-    setSelectedRegionId(regionSvgId);
-  };
+  const handleProvinciaClick = useCallback((regionSvgId: string) => {
+    console.log('click provincia:', regionSvgId, 'modoJuego:', modoJuego);
+    if (modoJuego) {
+      handleGameProvinciaClick(regionSvgId);
+    } else {
+      setSelectedRegionId(regionSvgId);
+    }
+  }, [modoJuego, handleGameProvinciaClick]);
 
   const selectedProvincia = provincias.find(p => p.regionSvgId === selectedRegionId);
 
@@ -233,6 +242,10 @@ export default function MapPage() {
           )}
         </div>
       </main>
+      
+      {eventoActual && (
+        <EventoModal onClose={() => useGameStore.getState().clearEvento()} />
+      )}
     </div>
   );
 }
