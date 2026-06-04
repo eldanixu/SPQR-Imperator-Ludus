@@ -11,7 +11,7 @@ export default function EventoModal({ onClose }: EventoModalProps) {
   const navigate = useNavigate();
   const { eventoActual, provinciaEventoId, setEstado, clearEvento } = useGameStore();
   const [disabled, setDisabled] = useState(false);
-  const [feedback, setFeedback] = useState<{ isCorrect: boolean; text: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ isCorrect: boolean; text: string; narracion?: string } | null>(null);
   
   if (!eventoActual) return null;
 
@@ -30,7 +30,7 @@ export default function EventoModal({ onClose }: EventoModalProps) {
         ? `+${eventoActual.recompensaOro} oro ⚔️ +100 gloria` 
         : `-${eventoActual.penalizacionPopularidad} popularidad`;
 
-      setFeedback({ isCorrect, text });
+      setFeedback({ isCorrect, text, narracion: data.narracion });
 
       setTimeout(() => {
         setEstado(data.nuevoEstado);
@@ -199,7 +199,12 @@ export default function EventoModal({ onClose }: EventoModalProps) {
             
             {feedback && (
               <div style={feedback.isCorrect ? styles.feedbackCorrect : styles.feedbackIncorrect}>
-                {feedback.text}
+                <div>{feedback.text}</div>
+                {feedback.narracion && (
+                  <div style={{ fontStyle: 'italic', color: '#d4af6a', fontSize: '13px', marginTop: '8px' }}>
+                    {feedback.narracion}
+                  </div>
+                )}
               </div>
             )}
           </>

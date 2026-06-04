@@ -47,5 +47,19 @@ services:
     depends_on:
       - spqr-backend
 
+  spqr-n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - WEBHOOK_URL=http://localhost:5678
+      - GENERIC_TIMEZONE=Europe/Madrid
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - spqr-backend
+
 volumes:
   mysql_data:
+  n8n_data:

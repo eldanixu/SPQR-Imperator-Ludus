@@ -27,4 +27,5 @@ app:
   jwt:
     secret: spqr-secret-key-minimum-256-bits-for-hs256-algorithm-2024
     expiration: 86400000
-
+  n8n:
+    narrar-evento-url: http://spqr-n8n:5678/webhook/narrar-evento

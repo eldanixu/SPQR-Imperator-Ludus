@@ -33,6 +33,7 @@ public class GameServiceImpl implements GameService {
     private final ProvinciaRepository provinciaRepository;
     private final PreguntaHistoricaRepository preguntaHistoricaRepository;
     private final PartidaResultadoRepository partidaResultadoRepository;
+    private final N8nService n8nService;
 
     @Override
     @Transactional
@@ -149,7 +150,19 @@ public class GameServiceImpl implements GameService {
 
         estadoJugadorRepository.save(estado);
 
-        return new ResolverResponse(correcto, mapToDTO(estado), finPartida, tipoFin);
+        String preguntaTxt = preguntaOpt.isPresent() ? preguntaOpt.get().getPregunta() : "Decisión del gobernador";
+        String provinciaNombre = provinciaOpt.isPresent() ? provinciaOpt.get().getNombre() : "Roma";
+        String respuestaTxt = req.respuesta() != null ? req.respuesta() : "";
+
+        String narracion = n8nService.narrarEvento(
+                username,
+                provinciaNombre,
+                preguntaTxt,
+                correcto,
+                respuestaTxt
+        );
+
+        return new ResolverResponse(correcto, mapToDTO(estado), finPartida, tipoFin, narracion);
     }
 
     @Override
