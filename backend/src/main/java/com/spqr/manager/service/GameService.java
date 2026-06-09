@@ -2,6 +2,7 @@ package com.spqr.manager.service;
 
 import com.spqr.manager.dto.EstadoJugadorDTO;
 import com.spqr.manager.dto.EventoDTO;
+import com.spqr.manager.dto.RankingDTO;
 import com.spqr.manager.dto.ResolverRequest;
 import com.spqr.manager.dto.ResolverResponse;
 import com.spqr.manager.dto.HistorialDTO;
@@ -14,4 +15,6 @@ public interface GameService {
     ResolverResponse resolverEvento(Long provinciaId, ResolverRequest req, String username);
     void resetPartida(String username);
     List<HistorialDTO> getHistorial(String username);
+    EstadoJugadorDTO sobornar(String username);
+    List<RankingDTO> getRanking();
 }

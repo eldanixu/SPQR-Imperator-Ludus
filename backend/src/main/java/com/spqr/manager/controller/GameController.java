@@ -3,11 +3,13 @@ package com.spqr.manager.controller;
 import com.spqr.manager.dto.ApiResponse;
 import com.spqr.manager.dto.EstadoJugadorDTO;
 import com.spqr.manager.dto.EventoDTO;
+import com.spqr.manager.dto.RankingDTO;
 import com.spqr.manager.dto.ResolverRequest;
 import com.spqr.manager.dto.ResolverResponse;
 import com.spqr.manager.dto.HistorialDTO;
 import com.spqr.manager.service.GameService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,5 +52,21 @@ public class GameController {
     public ApiResponse<List<HistorialDTO>> getHistorial(Authentication authentication) {
         List<HistorialDTO> historial = gameService.getHistorial(authentication.getName());
         return new ApiResponse<>(true, historial, "Historial obtenido correctamente");
+    }
+
+    @PostMapping("/sobornar")
+    public ResponseEntity<ApiResponse<EstadoJugadorDTO>> sobornar(Authentication authentication) {
+        try {
+            EstadoJugadorDTO estado = gameService.sobornar(authentication.getName());
+            return ResponseEntity.ok(new ApiResponse<>(true, estado, "Senado sobornado exitosamente"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.ok(new ApiResponse<>(false, null, "Oro insuficiente"));
+        }
+    }
+
+    @GetMapping("/ranking")
+    public ApiResponse<List<RankingDTO>> getRanking() {
+        List<RankingDTO> ranking = gameService.getRanking();
+        return new ApiResponse<>(true, ranking, "Ranking obtenido correctamente");
     }
 }

@@ -3,9 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import { useAuthStore } from '../store/useAuthStore';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
@@ -14,20 +16,23 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+
     try {
-      const response = await axiosInstance.post('/auth/login', {
+      const response = await axiosInstance.post('/auth/register', {
         username,
+        email,
         password,
       });
-      const { token } = response.data;
-      login(token, username);
+      const { token, username: resUsername } = response.data;
+      login(token, resUsername || username);
       navigate('/mapa');
     } catch (err: any) {
-      if (err.response && err.response.status === 401) {
-        setError('Credenciales incorrectas');
-      } else {
-        setError('Credenciales incorrectas');
-      }
+      setError(err.response?.data?.message || 'Error al registrar el usuario');
     }
   };
 
@@ -110,13 +115,16 @@ export default function LoginPage() {
       fontSize: '0.9rem',
       textAlign: 'center' as const,
     },
-    helpText: {
-      color: '#888',
-      fontSize: '0.85rem',
+    linkContainer: {
       textAlign: 'center' as const,
       marginTop: '24px',
       fontFamily: 'sans-serif',
+      fontSize: '0.9rem',
     },
+    link: {
+      color: '#C9A84C',
+      textDecoration: 'none',
+    }
   };
 
   return (
@@ -139,6 +147,19 @@ export default function LoginPage() {
               autoComplete="username"
             />
           </div>
+
+          <div style={styles.formGroup}>
+            <label htmlFor="email" style={styles.label}>Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={styles.input}
+              required
+              autoComplete="email"
+            />
+          </div>
           
           <div style={styles.formGroup}>
             <label htmlFor="password" style={styles.label}>Contraseña</label>
@@ -149,7 +170,20 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               style={styles.input}
               required
-              autoComplete="current-password"
+              autoComplete="new-password"
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label htmlFor="confirmPassword" style={styles.label}>Confirmar Contraseña</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              style={styles.input}
+              required
+              autoComplete="new-password"
             />
           </div>
           
@@ -159,17 +193,13 @@ export default function LoginPage() {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            Ingresar
+            Registrarse
           </button>
         </form>
         
-        <div style={styles.helpText}>
-          Credenciales: admin / password
-        </div>
-        
-        <div style={{ textAlign: 'center', marginTop: '16px', fontFamily: 'sans-serif', fontSize: '0.9rem' }}>
-          <Link to="/register" style={{ color: '#C9A84C', textDecoration: 'none' }}>
-            ¿No tienes cuenta? Regístrate
+        <div style={styles.linkContainer}>
+          <Link to="/login" style={styles.link}>
+            ¿Ya tienes cuenta? Inicia sesión
           </Link>
         </div>
       </div>

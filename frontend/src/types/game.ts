@@ -4,6 +4,7 @@ export interface EstadoJugador {
   popularidad: number;
   turno: number;
   provinciaActualId: number | null;
+  regionSvgActual?: string | null;
   partidaActiva: boolean;
 }
 
@@ -14,4 +15,5 @@ export interface EventoDTO {
   opciones?: string[];
   recompensaOro: number;
   penalizacionPopularidad: number;
+  preguntaId?: number | null;
 }

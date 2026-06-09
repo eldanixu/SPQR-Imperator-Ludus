@@ -8,6 +8,7 @@ public record EventoDTO(
         String pregunta,
         List<String> opciones,
         int recompensaOro,
-        int penalizacionPopularidad
+        int penalizacionPopularidad,
+        Long preguntaId
 ) {
 }

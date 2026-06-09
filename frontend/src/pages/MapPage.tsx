@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { useGameStore } from '../store/useGameStore';
@@ -19,6 +19,8 @@ interface Provincia {
 
 export default function MapPage() {
   const [isHovered, setIsHovered] = useState(false);
+  const [sobornarError, setSobornarError] = useState(false);
+  const sobornarTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [provincias, setProvincias] = useState<Provincia[]>([]);
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -58,12 +60,31 @@ export default function MapPage() {
     }
   };
 
+  const handleSobornar = async () => {
+    try {
+      const res = await axiosInstance.post('/juego/sobornar');
+      const data = res.data;
+      if (data.success) {
+        setEstado(data.data);
+      } else {
+        showSobornarError();
+      }
+    } catch {
+      showSobornarError();
+    }
+  };
+
+  const showSobornarError = () => {
+    if (sobornarTimer.current) clearTimeout(sobornarTimer.current);
+    setSobornarError(true);
+    sobornarTimer.current = setTimeout(() => setSobornarError(false), 2000);
+  };
+
   const handleProvinciaClick = useCallback((regionSvgId: string) => {
     console.log('click provincia:', regionSvgId, 'modoJuego:', modoJuego);
+    setSelectedRegionId(regionSvgId);
     if (modoJuego) {
       handleGameProvinciaClick(regionSvgId);
-    } else {
-      setSelectedRegionId(regionSvgId);
     }
   }, [modoJuego, handleGameProvinciaClick]);
 
@@ -71,7 +92,7 @@ export default function MapPage() {
 
   const styles = {
     page: {
-      backgroundColor: '#1a1410',
+      backgroundColor: '#0d2137',
       minHeight: '100vh',
       color: 'white',
       display: 'flex',
@@ -83,38 +104,56 @@ export default function MapPage() {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: '0 32px',
-      height: '60px',
-      backgroundColor: '#2C2518',
-      borderBottom: '1px solid #C9A84C',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
+      padding: '0 24px',
+      height: '56px',
+      background: 'linear-gradient(90deg, #1a0a00 0%, #2C1810 50%, #1a0a00 100%)',
+      borderBottom: '2px solid #C9A84C',
       flexShrink: 0,
+      whiteSpace: 'nowrap' as const,
+    },
+    navBrand: {
+      display: 'flex',
+      alignItems: 'baseline',
+      gap: '8px'
     },
     navTitle: {
       fontFamily: "'Cinzel', serif",
       color: '#C9A84C',
       margin: 0,
-      fontSize: '1.5rem',
-      letterSpacing: '1px',
+      fontSize: '24px',
+      fontWeight: 'bold',
+      letterSpacing: '4px',
+    },
+    navSubtitle: {
+      fontFamily: "'Cinzel', serif",
+      color: '#C9A84C',
+      fontSize: '11px',
+      letterSpacing: '2px',
+      opacity: 0.8
     },
     navActions: {
       display: 'flex',
       alignItems: 'center',
-      gap: '20px',
+      gap: '16px',
     },
     welcomeText: {
-      fontSize: '1rem',
-      color: '#e6ded4',
+      fontSize: '14px',
+      color: '#8a7a5a',
+    },
+    separator: {
+      color: '#C9A84C55',
+      margin: '0 4px',
+      fontSize: '18px',
     },
     toggleBtn: {
       backgroundColor: modoJuego ? '#C9A84C' : 'transparent',
       border: '1px solid #C9A84C',
       borderRadius: '4px',
-      color: modoJuego ? '#1a1410' : '#C9A84C',
-      padding: '8px 16px',
+      color: modoJuego ? '#1a0a00' : '#C9A84C',
+      padding: '4px 12px',
       cursor: 'pointer',
       fontFamily: "'Cinzel', serif",
-      fontSize: '0.9rem',
+      fontSize: '12px',
       fontWeight: 'bold',
       transition: 'all 0.3s ease',
     },
@@ -122,38 +161,40 @@ export default function MapPage() {
       backgroundColor: isHovered ? '#C9A84C' : 'transparent',
       border: '1px solid #C9A84C',
       borderRadius: '4px',
-      color: isHovered ? '#1a1410' : '#C9A84C',
-      padding: '8px 16px',
+      color: isHovered ? '#1a0a00' : '#C9A84C',
+      padding: '4px 12px',
       cursor: 'pointer',
       fontFamily: "'Cinzel', serif",
-      fontSize: '0.9rem',
+      fontSize: '12px',
       fontWeight: 'bold',
       transition: 'all 0.3s ease',
     },
     main: {
       display: 'flex',
-      height: 'calc(100vh - 60px)',
+      height: 'calc(100vh - 56px)',
       width: '100%',
       position: 'relative' as const,
     },
     mapContainer: {
       flex: 1,
       height: '100%',
+      width: '100%'
     },
     sidePanel: {
-      width: '300px',
-      height: '100%',
-      backgroundColor: '#2C2518',
+      width: '280px',
+      height: 'calc(100vh - 56px)',
+      background: 'linear-gradient(180deg, #1a0a00 0%, #0d0500 100%)',
       borderLeft: '1px solid #C9A84C',
       padding: '24px',
       boxSizing: 'border-box' as const,
-      position: 'absolute' as const,
+      position: 'fixed' as const,
       right: 0,
-      top: 0,
-      transform: selectedRegionId ? 'translateX(0)' : 'translateX(100%)',
+      top: '56px',
+      transform: selectedRegionId && selectedProvincia ? 'translateX(0)' : 'translateX(100%)',
       transition: 'transform 0.3s ease-in-out',
       overflowY: 'auto' as const,
       boxShadow: '-4px 0 15px rgba(0,0,0,0.5)',
+      zIndex: 10,
     },
     closeBtn: {
       position: 'absolute' as const,
@@ -170,43 +211,96 @@ export default function MapPage() {
     panelTitle: {
       fontFamily: "'Cinzel', serif",
       color: '#C9A84C',
-      marginTop: '16px',
+      marginTop: '8px',
       marginBottom: '4px',
-      fontSize: '1.5rem',
-      borderBottom: '1px solid rgba(201, 168, 76, 0.3)',
-      paddingBottom: '8px',
+      fontSize: '20px',
+      fontWeight: 'normal',
     },
     panelSubtitle: {
-      fontFamily: "'Cinzel', serif",
-      color: '#aaa',
-      fontSize: '1rem',
+      fontFamily: 'serif',
+      color: '#8a7a5a',
+      fontSize: '13px',
       fontStyle: 'italic',
       margin: '0 0 16px 0',
     },
+    hr: {
+      border: 'none',
+      borderTop: '1px solid #C9A84C33',
+      margin: '16px 0',
+    },
     panelInfo: {
-      color: '#e6ded4',
-      fontSize: '0.95rem',
+      color: '#c8b89a',
+      fontSize: '14px',
       lineHeight: 1.6,
       marginBottom: '16px',
     },
     capitalLabel: {
       color: '#C9A84C',
       fontWeight: 'bold',
-      marginTop: '16px',
-      display: 'block',
+      fontSize: '14px',
     }
   };
 
   return (
     <div style={styles.page}>
       <header style={styles.navbar}>
-        <h1 style={styles.navTitle}>SPQR Imperator Ludus</h1>
+        <div style={styles.navBrand}>
+          <h1 style={styles.navTitle}>SPQR</h1>
+          <span style={styles.navSubtitle}>IMPERATOR LUDUS</span>
+        </div>
         <div style={styles.navActions}>
           <span style={styles.welcomeText}>Bienvenido {username || 'Imperator'}</span>
+          <span style={styles.separator}>|</span>
           <button style={styles.toggleBtn} onClick={handleToggleModo}>
-            {modoJuego ? '📜 Modo Historia' : '⚔️ Modo Imperator'}
+            {modoJuego ? 'Modo Historia' : 'Modo Imperator'}
           </button>
+          {modoJuego && (
+            <>
+              <span style={styles.separator}>|</span>
+              <button
+                style={{
+                  border: '1px solid #C9A84C',
+                  color: '#C9A84C',
+                  background: 'transparent',
+                  borderRadius: '4px',
+                  padding: '4px 12px',
+                  cursor: 'pointer',
+                  fontFamily: "'Cinzel', serif",
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  transition: 'background 0.2s ease',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#C9A84C22')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                onClick={handleSobornar}
+              >
+                ⚖️ Sobornar (200🪙)
+              </button>
+            </>
+          )}
+          <span style={styles.separator}>|</span>
           <GameHUD />
+          <span style={styles.separator}>|</span>
+          <button
+            style={{
+              border: '1px solid #C9A84C',
+              color: '#C9A84C',
+              background: 'transparent',
+              borderRadius: '4px',
+              padding: '4px 12px',
+              cursor: 'pointer',
+              fontFamily: "'Cinzel', serif",
+              fontSize: '12px',
+              fontWeight: 'bold',
+              transition: 'background 0.2s ease',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#C9A84C22')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            onClick={() => navigate('/ranking')}
+          >
+            🏆 Ranking
+          </button>
+          <span style={styles.separator}>|</span>
           <button
             onClick={handleLogout}
             style={styles.logoutBtn}
@@ -217,9 +311,32 @@ export default function MapPage() {
           </button>
         </div>
       </header>
+      {sobornarError && (
+        <div style={{
+          position: 'absolute',
+          top: '56px',
+          left: 0,
+          right: 0,
+          textAlign: 'center',
+          zIndex: 100,
+          padding: '8px 0',
+          background: '#8B000099',
+          color: '#ff6b6b',
+          fontFamily: "'Cinzel', serif",
+          fontSize: '13px',
+          letterSpacing: '2px',
+          borderBottom: '1px solid #8B0000',
+          backdropFilter: 'blur(4px)',
+        }}>
+          ⚠️ Oro insuficiente para sobornar al Senado
+        </div>
+      )}
       <main style={styles.main}>
         <div style={styles.mapContainer}>
-          <RomanMap onProvinciaClick={handleProvinciaClick} />
+          <RomanMap 
+            selectedRegionId={selectedRegionId} 
+            onProvinciaClick={handleProvinciaClick} 
+          />
         </div>
         
         <div style={styles.sidePanel}>
@@ -230,13 +347,15 @@ export default function MapPage() {
               <h2 style={styles.panelTitle}>{selectedProvincia.nombre}</h2>
               <p style={styles.panelSubtitle}>{selectedProvincia.nombreLatino}</p>
               
+              <hr style={styles.hr} />
+              
               <div style={styles.panelInfo}>
                 {selectedProvincia.descripcion}
               </div>
               
               <div>
                 <span style={styles.capitalLabel}>Capital: </span>
-                <span style={{ color: '#e6ded4' }}>{selectedProvincia.capital}</span>
+                <span style={{ color: '#c8b89a', fontSize: '14px' }}>{selectedProvincia.capital}</span>
               </div>
             </>
           )}
@@ -244,7 +363,10 @@ export default function MapPage() {
       </main>
       
       {eventoActual && (
-        <EventoModal onClose={() => useGameStore.getState().clearEvento()} />
+        <EventoModal onClose={() => {
+          useGameStore.getState().clearEvento();
+          setSelectedRegionId(null);
+        }} />
       )}
     </div>
   );

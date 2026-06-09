@@ -2,8 +2,10 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import MapPage from './pages/MapPage';
 import FinPartidaPage from './pages/FinPartidaPage';
+import RankingPage from './pages/RankingPage';
 import './index.css';
 
 interface ProtectedRouteProps {
@@ -32,6 +34,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route
           path="/mapa"
           element={
@@ -48,6 +51,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/ranking" element={<RankingPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

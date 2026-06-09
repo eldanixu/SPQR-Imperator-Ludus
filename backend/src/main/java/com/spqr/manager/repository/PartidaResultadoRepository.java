@@ -2,6 +2,7 @@ package com.spqr.manager.repository;
 
 import com.spqr.manager.entity.PartidaResultado;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -9,4 +10,8 @@ import java.util.List;
 @Repository
 public interface PartidaResultadoRepository extends JpaRepository<PartidaResultado, Long> {
     List<PartidaResultado> findTop5ByUsuarioUsernameOrderByCreatedAtDesc(String username);
+
+    @Query("SELECT p.usuario.username, MAX(p.gloriaFinal), MAX(p.oroFinal), MAX(p.turnos), COUNT(p) " +
+           "FROM PartidaResultado p GROUP BY p.usuario.username ORDER BY MAX(p.gloriaFinal) DESC")
+    List<Object[]> findRankingGlobal();
 }

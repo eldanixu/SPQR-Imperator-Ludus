@@ -2,6 +2,7 @@ package com.spqr.manager.service;
 
 import com.spqr.manager.dto.EstadoJugadorDTO;
 import com.spqr.manager.dto.EventoDTO;
+import com.spqr.manager.dto.RankingDTO;
 import com.spqr.manager.dto.ResolverRequest;
 import com.spqr.manager.dto.ResolverResponse;
 import com.spqr.manager.dto.HistorialDTO;
@@ -16,6 +17,7 @@ import com.spqr.manager.repository.PreguntaHistoricaRepository;
 import com.spqr.manager.repository.ProvinciaRepository;
 import com.spqr.manager.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GameServiceImpl implements GameService {
@@ -65,7 +68,8 @@ public class GameServiceImpl implements GameService {
                     p.getPregunta(),
                     opciones,
                     p.getRecompensaOro() != null ? p.getRecompensaOro() : 0,
-                    p.getPenalizacionPopularidad() != null ? p.getPenalizacionPopularidad() : 0
+                    p.getPenalizacionPopularidad() != null ? p.getPenalizacionPopularidad() : 0,
+                    p.getId()
             );
         }
 
@@ -75,7 +79,8 @@ public class GameServiceImpl implements GameService {
                 null,
                 null,
                 30,
-                5
+                5,
+                null
         );
     }
 
@@ -85,7 +90,8 @@ public class GameServiceImpl implements GameService {
         EstadoJugador estado = getOrCreateEstadoJugador(username);
         
         if (Boolean.FALSE.equals(estado.getPartidaActiva())) {
-            return new ResolverResponse(false, mapToDTO(estado), true, "PARTIDA_TERMINADA");
+            String narracion = n8nService.narrarEvento(username, "Roma", "Partida terminada", false, "");
+            return new ResolverResponse(false, mapToDTO(estado), true, "PARTIDA_TERMINADA", narracion);
         }
 
         Optional<Provincia> provinciaOpt = provinciaRepository.findById(provinciaId);
@@ -94,15 +100,19 @@ public class GameServiceImpl implements GameService {
         }
 
         boolean correcto = false;
-        
-        Optional<PreguntaHistorica> preguntaOpt = preguntaHistoricaRepository.findRandomByProvinciaId(provinciaId);
-        if (preguntaOpt.isEmpty()) {
-            preguntaOpt = preguntaHistoricaRepository.findRandom();
-        }
+
+        // Buscar la pregunta exacta que se mostró al usuario usando preguntaId
+        Optional<PreguntaHistorica> preguntaOpt = (req.preguntaId() != null)
+                ? preguntaHistoricaRepository.findById(req.preguntaId())
+                : Optional.empty();
+
+        log.info("DEBUG - preguntaId recibido: {}", req.preguntaId());
+        log.info("DEBUG - respuesta recibida: '{}'", req.respuesta());
+        log.info("DEBUG - pregunta encontrada: {}", preguntaOpt.map(p -> p.getId() + " respCorrecta=" + p.getRespuestaCorrecta()).orElse("NO ENCONTRADA"));
 
         if (preguntaOpt.isPresent()) {
             PreguntaHistorica p = preguntaOpt.get();
-            if (req.respuesta() != null && p.getRespuestaCorrecta() != null && 
+            if (req.respuesta() != null && p.getRespuestaCorrecta() != null &&
                 req.respuesta().trim().equalsIgnoreCase(p.getRespuestaCorrecta().trim())) {
                 correcto = true;
                 estado.setOro(estado.getOro() + (p.getRecompensaOro() != null ? p.getRecompensaOro() : 0));
@@ -110,12 +120,13 @@ public class GameServiceImpl implements GameService {
             } else {
                 estado.setPopularidad(estado.getPopularidad() - (p.getPenalizacionPopularidad() != null ? p.getPenalizacionPopularidad() : 0));
             }
-        } else {
-            // Caso de evento DECISION por defecto
+        } else if (req.preguntaId() == null) {
+            // Evento DECISION (sin pregunta): recompensar por defecto
             estado.setOro(estado.getOro() + 30);
             estado.setPopularidad(estado.getPopularidad() - 5);
             correcto = true;
         }
+        // Si preguntaId no nulo pero no se encontró → correcto=false (no hacer nada)
 
         estado.setTurno(estado.getTurno() + 1);
 
@@ -190,6 +201,35 @@ public class GameServiceImpl implements GameService {
                         p.getTurnos(),
                         p.getResultado(),
                         p.getCreatedAt() != null ? p.getCreatedAt().toString() : ""
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public EstadoJugadorDTO sobornar(String username) {
+        EstadoJugador estado = getOrCreateEstadoJugador(username);
+        if (estado.getOro() == null || estado.getOro() < 200) {
+            throw new IllegalStateException("Oro insuficiente");
+        }
+        estado.setOro(estado.getOro() - 200);
+        estado.setPopularidad(estado.getPopularidad() + 20);
+        estadoJugadorRepository.save(estado);
+        return mapToDTO(estado);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RankingDTO> getRanking() {
+        List<Object[]> rows = partidaResultadoRepository.findRankingGlobal();
+        return rows.stream()
+                .limit(10)
+                .map(r -> new RankingDTO(
+                        (String) r[0],
+                        ((Number) r[1]).longValue(),
+                        ((Number) r[2]).longValue(),
+                        ((Number) r[3]).longValue(),
+                        ((Number) r[4]).longValue()
                 ))
                 .collect(Collectors.toList());
     }

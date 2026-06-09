@@ -4,7 +4,7 @@ import { useGameStore } from '../store/useGameStore';
 
 export function useGameFlow() {
   const [loading, setLoading] = useState(false);
-  const { modoJuego, setEvento } = useGameStore();
+  const { modoJuego, setEvento, marcarVisitada } = useGameStore();
 
   const handleProvinciaClick = async (regionSvgId: string) => {
     if (!modoJuego) return;
@@ -21,6 +21,8 @@ export function useGameFlow() {
         const eventRes = await axiosInstance.get(`/juego/provincia/${prov.id}/evento`);
         const evento = eventRes.data.data || eventRes.data;
         setEvento(evento, prov.id);
+        // 3. Marcar la provincia como visitada
+        marcarVisitada(regionSvgId);
       }
     } catch (err) {
       console.error('Error fetching event:', err);

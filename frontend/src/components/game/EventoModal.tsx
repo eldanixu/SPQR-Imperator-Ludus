@@ -1,17 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../store/useGameStore';
 import axiosInstance from '../../api/axiosInstance';
 
 interface EventoModalProps {
   onClose: () => void;
+  provinciaNombre?: string;
 }
 
-export default function EventoModal({ onClose }: EventoModalProps) {
+export default function EventoModal({ onClose, provinciaNombre }: EventoModalProps) {
   const navigate = useNavigate();
   const { eventoActual, provinciaEventoId, setEstado, clearEvento } = useGameStore();
   const [disabled, setDisabled] = useState(false);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; text: string; narracion?: string } | null>(null);
+  const [showContinue, setShowContinue] = useState(false);
+  const [resolverData, setResolverData] = useState<any>(null);
+  const [timeLeft, setTimeLeft] = useState(30);
+  
+  useEffect(() => {
+    if (eventoActual?.tipo === 'PREGUNTA') {
+      setTimeLeft(30);
+    }
+  }, [eventoActual]);
+
+  useEffect(() => {
+    if (!eventoActual || eventoActual.tipo !== 'PREGUNTA' || disabled) return;
+
+    const timerId = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerId);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, [eventoActual, disabled]);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !disabled && eventoActual?.tipo === 'PREGUNTA') {
+      handleAnswer('TIMEOUT');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, disabled, eventoActual]);
   
   if (!eventoActual) return null;
 
@@ -21,7 +54,8 @@ export default function EventoModal({ onClose }: EventoModalProps) {
 
     try {
       const res = await axiosInstance.post(`/juego/provincia/${provinciaEventoId}/resolver`, {
-        respuesta
+        respuesta,
+        preguntaId: eventoActual.preguntaId ?? null
       });
       const data = res.data.data || res.data;
 
@@ -32,13 +66,9 @@ export default function EventoModal({ onClose }: EventoModalProps) {
 
       setFeedback({ isCorrect, text, narracion: data.narracion });
 
+      setResolverData(data);
       setTimeout(() => {
-        setEstado(data.nuevoEstado);
-        clearEvento();
-        onClose();
-        if (data.finPartida) {
-          navigate('/fin-partida');
-        }
+        setShowContinue(true);
       }, 1500);
     } catch (err) {
       console.error('Error resolving event:', err);
@@ -46,8 +76,18 @@ export default function EventoModal({ onClose }: EventoModalProps) {
     }
   };
 
+  const handleContinue = () => {
+    if (resolverData) {
+      setEstado(resolverData.nuevoEstado);
+      clearEvento();
+      onClose();
+      if (resolverData.finPartida) {
+        navigate('/fin-partida');
+      }
+    }
+  };
+
   const handleActuar = () => {
-    // Decision - Actuar: adds 30 oro locally and closes
     const estadoActual = useGameStore.getState();
     setEstado({
       oro: estadoActual.oro + 30,
@@ -96,12 +136,38 @@ export default function EventoModal({ onClose }: EventoModalProps) {
       fontSize: '24px',
       cursor: 'pointer',
     },
+    provinciaTitulo: {
+      fontFamily: "'Cinzel', serif",
+      color: '#C9A84C',
+      fontSize: '22px',
+      fontWeight: 'bold',
+      letterSpacing: '2px',
+      textAlign: 'center' as const,
+      marginBottom: '4px',
+      textShadow: '0 0 12px rgba(201,168,76,0.4)',
+    },
+    provinciaDivider: {
+      border: 'none',
+      borderTop: '1px solid rgba(201,168,76,0.3)',
+      margin: '10px 0 20px 0',
+    },
     header: {
       color: '#888',
-      fontSize: '12px',
+      fontSize: '11px',
       marginBottom: '8px',
       fontWeight: 'bold',
-      letterSpacing: '1px',
+      letterSpacing: '2px',
+      textTransform: 'uppercase' as const,
+    },
+    timerDisplay: {
+      fontFamily: "'Cinzel', serif",
+      fontSize: '24px',
+      textAlign: 'center' as const,
+      marginBottom: '20px',
+      color: timeLeft <= 10 ? '#cc2200' : '#C9A84C',
+      fontWeight: 'bold',
+      transition: 'color 0.3s ease',
+      textShadow: timeLeft <= 10 ? '0 0 8px rgba(204, 34, 0, 0.4)' : '0 0 8px rgba(201, 168, 76, 0.2)',
     },
     pregunta: {
       fontFamily: "'Cinzel', serif",
@@ -110,27 +176,30 @@ export default function EventoModal({ onClose }: EventoModalProps) {
       marginBottom: '24px',
       lineHeight: 1.4,
     },
-    btnOpcion: (opcionIndex: number) => {
-      // Find if this specific button was selected during feedback
-      let btnBg = '#1a1410';
-      if (feedback && disabled) {
-         // It's hard to know which button was clicked from state without tracking it, 
-         // so we just show feedback globally or on all buttons. 
-         // Let's implement dynamic background via CSS classes or inline style override when clicked.
-      }
-      return {
-        width: '100%',
-        margin: '6px 0',
-        padding: '12px',
-        backgroundColor: '#1a1410',
-        border: '1px solid rgba(201, 168, 76, 0.33)',
-        color: 'white',
-        cursor: disabled ? 'default' : 'pointer',
-        textAlign: 'left' as const,
-        fontSize: '16px',
-        fontFamily: 'sans-serif',
-        transition: 'all 0.2s ease',
-      };
+    btnOpcion: (_opcionIndex: number) => ({
+      width: '100%',
+      margin: '6px 0',
+      padding: '12px',
+      backgroundColor: '#1a1410',
+      border: '1px solid rgba(201, 168, 76, 0.33)',
+      color: 'white',
+      cursor: disabled ? 'default' : 'pointer',
+      textAlign: 'left' as const,
+      fontSize: '16px',
+      fontFamily: 'sans-serif',
+      transition: 'all 0.2s ease',
+    }),
+    narracionBox: {
+      border: '1px solid #C9A84C33',
+      backgroundColor: 'rgba(0,0,0,0.3)',
+      padding: '12px',
+      fontStyle: 'italic' as const,
+      color: '#d4af6a',
+      fontSize: '14px',
+      lineHeight: 1.7,
+      borderRadius: '6px',
+      marginTop: '12px',
+      letterSpacing: '0.3px',
     },
     feedbackCorrect: {
       backgroundColor: '#2d5a27',
@@ -151,17 +220,45 @@ export default function EventoModal({ onClose }: EventoModalProps) {
       marginTop: '16px',
       fontFamily: "'Cinzel', serif",
       fontWeight: 'bold',
-    }
+    },
+    continueBtn: {
+      width: '100%',
+      margin: '16px 0 0 0',
+      padding: '14px 32px',
+      backgroundColor: '#C9A84C',
+      border: '2px solid #C9A84C',
+      borderRadius: '4px',
+      color: '#1a1410',
+      cursor: 'pointer',
+      textAlign: 'center' as const,
+      fontSize: '16px',
+      fontFamily: "'Cinzel', serif",
+      fontWeight: 'bold',
+      letterSpacing: '1px',
+      transition: 'all 0.2s ease',
+    },
   };
 
   return (
     <div style={styles.overlay}>
       <div style={styles.modal}>
         <button style={styles.closeBtn} onClick={onClose} disabled={disabled}>×</button>
-        <div style={styles.header}>EVENTO</div>
+
+        {/* Título con nombre de la provincia */}
+        {provinciaNombre && (
+          <>
+            <div style={styles.provinciaTitulo}>{provinciaNombre}</div>
+            <hr style={styles.provinciaDivider} />
+          </>
+        )}
+
+        <div style={styles.header}>Evento</div>
         
         {eventoActual.tipo === 'PREGUNTA' && (
           <>
+            <div style={styles.timerDisplay}>
+              {timeLeft}s
+            </div>
             <div style={styles.pregunta}>{eventoActual.pregunta}</div>
             
             {eventoActual.opciones?.map((opcion, i) => {
@@ -174,17 +271,10 @@ export default function EventoModal({ onClose }: EventoModalProps) {
                     const btn = e.currentTarget;
                     if (!disabled) {
                       handleAnswer(letter);
-                      // Set an active style immediately on this button to receive feedback style later
                       btn.dataset.selected = 'true';
                     }
                   }}
-                  style={{
-                    ...styles.btnOpcion(i),
-                    // Apply hover styles through inline onMouseEnter/Leave for simplicity, 
-                    // or just rely on CSS which we aren't using. 
-                    // Let's handle the specific requirement of feedback background on the button:
-                    ...(feedback && disabled ? {} : {}) // We will use the feedback block below instead of styling the button
-                  }}
+                  style={styles.btnOpcion(i)}
                   onMouseEnter={(e) => {
                     if (!disabled) e.currentTarget.style.borderColor = '#C9A84C';
                   }}
@@ -198,14 +288,34 @@ export default function EventoModal({ onClose }: EventoModalProps) {
             })}
             
             {feedback && (
-              <div style={feedback.isCorrect ? styles.feedbackCorrect : styles.feedbackIncorrect}>
-                <div>{feedback.text}</div>
+              <>
+                <div style={feedback.isCorrect ? styles.feedbackCorrect : styles.feedbackIncorrect}>
+                  <div>{feedback.text}</div>
+                </div>
                 {feedback.narracion && (
-                  <div style={{ fontStyle: 'italic', color: '#d4af6a', fontSize: '13px', marginTop: '8px' }}>
+                  <div style={styles.narracionBox}>
+                    <span style={{ color: '#C9A84C', fontStyle: 'normal', fontSize: '11px', letterSpacing: '2px', fontFamily: "'Cinzel', serif", display: 'block', marginBottom: '6px' }}>NARRACIÓN</span>
                     {feedback.narracion}
                   </div>
                 )}
-              </div>
+              </>
+            )}
+            
+            {showContinue && (
+              <button 
+                onClick={handleContinue}
+                style={styles.continueBtn}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#e0c070';
+                  e.currentTarget.style.boxShadow = '0 0 16px rgba(201,168,76,0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#C9A84C';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                Continuar →
+              </button>
             )}
           </>
         )}
